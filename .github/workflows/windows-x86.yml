@@ -2,11 +2,8 @@ name: windows-x86
 
 on: 
   push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
-  schedule:
-    - cron: '0 0 * * 0'
 
 jobs:
   build-windows-x86:
@@ -28,7 +25,7 @@ jobs:
           cmd /c gclient
           cmd /c python scripts/bootstrap.py
           cmd /c gclient sync
-          cmd /c gn gen out/Release --args="is_debug=false target_cpu=\"x86\" angle_build_all=false"
+          cmd /c gn gen out/Release --args="is_debug=false target_cpu=\"x86\" angle_build_all=false angle_enable_vulkan=false angle_enable_gl=false angle_enable_null=false"
           cmd /c autoninja -C out/Release
       - name: Pack
         shell: bash
