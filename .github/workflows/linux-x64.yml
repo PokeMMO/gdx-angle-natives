@@ -12,6 +12,9 @@ jobs:
   build-linux-x64:
     runs-on: ubuntu-latest
     steps:
+      - name: Delete huge unnecessary tools folder
+        run: |
+          rm -rf /opt/hostedtoolcache
       - name: Checkout sources
         run: |
           git clone https://github.com/google/angle .
@@ -45,3 +48,4 @@ jobs:
         with:
           name: angle-linux-x64
           path: angle-linux-x64
+
