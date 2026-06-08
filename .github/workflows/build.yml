@@ -1,0 +1,325 @@
+name: build-angle
+
+on: push
+
+jobs:
+  load-rev:
+    runs-on: ubuntu-latest
+    outputs:
+      rev: ${{ steps.step1.outputs.rev }}
+    steps:
+      - id: step1
+        run: echo "rev=$(curl 'https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Windows&num=1&offset=0' | jq -r '.[0].hashes.angle')" >> "$GITHUB_OUTPUT"
+
+  build-windows-x64:
+    runs-on: windows-2022
+    needs: load-rev
+    steps:
+      - name: Checkout sources
+        env:
+          ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
+        run: |
+          git clone https://github.com/google/angle . && git checkout "$env:ANGLE_REVISION"
+      - name: Fetch depot_tools
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+      - name: Build
+        shell: cmd
+        run: |
+          set PATH=%cd%\depot_tools;%PATH%
+          set DEPOT_TOOLS_WIN_TOOLCHAIN=0
+          set vs2019_install=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
+          set WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10
+          cmd /c gclient
+          cmd /c python scripts/bootstrap.py
+          cmd /c gclient sync -D -R
+          cmd /c mkdir chrome
+          cmd /c powershell -Command "Write-Output "MAJOR=132`nMINOR=0`nBUILD=6998`nPATCH=36"" > chrome/VERSION
+          cmd /c gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"x64\" angle_build_all=false angle_enable_vulkan=false angle_enable_gl=false angle_enable_null=false"
+          cmd /c autoninja -C out/Release libGLESv2 libEGL
+      - name: Pack
+        shell: bash
+        run: |
+          mkdir angle-windows-x64
+          mkdir angle-windows-x64/dist
+          rm -rf out/Release/cdb
+          rm -rf out/Release/gen
+          rm -rf out/Release/obj
+          rm -rf out/Release/args.gn
+          rm -rf out/Release/build.ninja
+          rm -rf out/Release/build.ninja.d
+          rm -rf out/Release/toolchain.ninja
+          rm -rf out/Release/environment.*
+          find out/Release -name "*.pdb" -delete
+          mv -f out/Release/* angle-windows-x64/dist/
+          cp -rf include angle-windows-x64/
+          find angle-windows-x64 -name ".clang-format" -delete
+          find angle-windows-x64 -name "*.md" -delete
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: angle-windows-x64
+          path: angle-windows-x64
+
+  build-windows-arm64:
+    runs-on: windows-2022
+    needs: load-rev
+    steps:
+      - name: Checkout sources
+        env:
+          ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
+        run: |
+          git clone https://github.com/google/angle . && git checkout "$env:ANGLE_REVISION"
+      - name: Fetch depot_tools
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+      - name: Build
+        shell: cmd
+        run: |
+          set PATH=%cd%\depot_tools;%PATH%
+          set DEPOT_TOOLS_WIN_TOOLCHAIN=0
+          set vs2019_install=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
+          set WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10
+          cmd /c gclient
+          cmd /c python scripts/bootstrap.py
+          cmd /c gclient sync -D -R
+          cmd /c mkdir chrome
+          cmd /c powershell -Command "Write-Output "MAJOR=132`nMINOR=0`nBUILD=6998`nPATCH=36"" > chrome/VERSION
+          cmd /c gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 is_clang=false use_custom_libcxx=false use_custom_libcxx_for_host=false target_cpu=\"arm64\" angle_enable_vulkan=false angle_enable_gl=false angle_enable_null=false"
+          cmd /c autoninja -C out/Release libGLESv2 libEGL
+      - name: Pack
+        shell: bash
+        run: |
+          mkdir angle-windows-arm64
+          mkdir angle-windows-arm64/dist
+          rm -rf out/Release/cdb
+          rm -rf out/Release/gen
+          rm -rf out/Release/obj
+          rm -rf out/Release/args.gn
+          rm -rf out/Release/build.ninja
+          rm -rf out/Release/build.ninja.d
+          rm -rf out/Release/toolchain.ninja
+          rm -rf out/Release/environment.*
+          find out/Release -name "*.pdb" -delete
+          mv -f out/Release/* angle-windows-arm64/dist/
+          cp -rf include angle-windows-arm64/
+          find angle-windows-arm64 -name ".clang-format" -delete
+          find angle-windows-arm64 -name "*.md" -delete
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: angle-windows-arm64
+          path: angle-windows-arm64
+
+  build-macos-x64:
+    runs-on: macos-latest
+    needs: load-rev
+    steps:
+      - name: Checkout sources
+        env:
+          ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
+        run: |
+          git clone https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
+      - name: Fetch depot_tools
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+      - name: Build
+        run: |
+          export PATH="$(pwd)/depot_tools:$PATH"
+          python scripts/bootstrap.py
+          gclient sync -D -R
+          gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"x64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false"
+          autoninja -C out/Release libGLESv2 libEGL
+      - name: Pack
+        run: |
+          mkdir angle-macos-x64
+          mkdir angle-macos-x64/dist
+          rm -rf out/Release/gen
+          rm -rf out/Release/obj
+          rm -rf out/Release/args.gn
+          rm -rf out/Release/build.ninja
+          rm -rf out/Release/build.ninja.d
+          rm -rf out/Release/toolchain.ninja
+          find out/Release -name "*.TOC" -delete
+          mv -f out/Release/* angle-macos-x64/dist/
+          cp -rf include angle-macos-x64/
+          find angle-macos-x64 -name ".clang-format" -delete
+          find angle-macos-x64 -name "*.md" -delete
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: angle-macos-x64
+          path: angle-macos-x64
+
+  build-macos-arm64:
+    runs-on: macos-latest
+    needs: load-rev
+    steps:
+      - name: Checkout sources
+        env:
+          ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
+        run: |
+          git clone https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
+      - name: Fetch depot_tools
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+      - name: Build
+        run: |
+          export PATH="$(pwd)/depot_tools:$PATH"
+          python scripts/bootstrap.py
+          gclient sync -D -R
+          gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"arm64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false"
+          autoninja -C out/Release libGLESv2 libEGL
+      - name: Pack
+        run: |
+          mkdir angle-macos-arm64
+          mkdir angle-macos-arm64/dist
+          rm -rf out/Release/gen
+          rm -rf out/Release/obj
+          rm -rf out/Release/args.gn
+          rm -rf out/Release/build.ninja
+          rm -rf out/Release/build.ninja.d
+          rm -rf out/Release/toolchain.ninja
+          find out/Release -name "*.TOC" -delete
+          mv -f out/Release/* angle-macos-arm64/dist/
+          cp -rf include angle-macos-arm64/
+          find angle-macos-arm64 -name ".clang-format" -delete
+          find angle-macos-arm64 -name "*.md" -delete
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: angle-macos-arm64
+          path: angle-macos-arm64
+
+  build-linux-x64:
+    runs-on: ubuntu-latest
+    needs: load-rev
+    steps:
+      - name: Delete huge unnecessary tools folder
+        run: |
+          rm -rf /opt/hostedtoolcache
+      - name: Checkout sources
+        env:
+          ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
+        run: |
+          git clone https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
+      - name: Fetch depot_tools
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+      - name: Build
+        run: |
+          export PATH="$(pwd)/depot_tools:$PATH"
+          python scripts/bootstrap.py
+          gclient sync -D -R
+          gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"x64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false angle_enable_vulkan=true"
+          autoninja -C out/Release libGLESv2 libEGL
+      - name: Pack
+        run: |
+          mkdir angle-linux-x64
+          mkdir angle-linux-x64/dist
+          rm -rf out/Release/gen
+          rm -rf out/Release/obj
+          rm -rf out/Release/args.gn
+          rm -rf out/Release/build.ninja
+          rm -rf out/Release/build.ninja.d
+          rm -rf out/Release/toolchain.ninja
+          find out/Release -name "*.TOC" -delete
+          strip -s out/Release/libEGL.so
+          strip -s out/Release/libGLESv2.so
+          mv -f out/Release/* angle-linux-x64/dist/
+          cp -rf include angle-linux-x64/
+          find angle-linux-x64 -name ".clang-format" -delete
+          find angle-linux-x64 -name "*.md" -delete
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: angle-linux-x64
+          path: angle-linux-x64
+
+  build-linux-arm64:
+    runs-on: ubuntu-latest
+    needs: load-rev
+    steps:
+      - name: Delete huge unnecessary tools folder
+        run: |
+          rm -rf /opt/hostedtoolcache
+      - name: Checkout sources
+        env:
+          ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
+        run: |
+          git clone https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
+      - name: Fetch depot_tools
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+      - name: Install ARM64 GNU Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+      - name: Build
+        run: |
+          export PATH="$(pwd)/depot_tools:$PATH"
+          python scripts/bootstrap.py
+          gclient sync -D -R
+          build/linux/sysroot_scripts/install-sysroot.py --arch=arm64
+          gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"arm64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false angle_enable_vulkan=true"
+          autoninja -C out/Release libGLESv2 libEGL
+      - name: Pack
+        run: |
+          mkdir angle-linux-arm64
+          mkdir angle-linux-arm64/dist
+          rm -rf out/Release/gen
+          rm -rf out/Release/obj
+          rm -rf out/Release/args.gn
+          rm -rf out/Release/build.ninja
+          rm -rf out/Release/build.ninja.d
+          rm -rf out/Release/toolchain.ninja
+          find out/Release -name "*.TOC" -delete
+          aarch64-linux-gnu-strip -s out/Release/libEGL.so
+          aarch64-linux-gnu-strip -s out/Release/libGLESv2.so
+          mv -f out/Release/* angle-linux-arm64/dist/
+          cp -rf include angle-linux-arm64/
+          find angle-linux-arm64 -name ".clang-format" -delete
+          find angle-linux-arm64 -name "*.md" -delete
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: angle-linux-arm64
+          path: angle-linux-arm64
+
+  package:
+    runs-on: ubuntu-latest
+    needs:
+      - build-linux-arm64
+      - build-linux-x64
+      - build-macos-arm64
+      - build-macos-x64
+      - build-windows-arm64
+      - build-windows-x64
+    steps:
+      - name: Download all Artifacts
+        uses: actions/download-artifact@v8
+      - name: Pack
+        run: |
+          mkdir -p out/linux/arm64/angle
+          mkdir -p out/linux/x64/angle
+          mkdir -p out/macos/arm64/angle
+          mkdir -p out/macos/x64/angle
+          mkdir -p out/windows/arm64/angle
+          mkdir -p out/windows/x64/angle
+          cp angle-linux-arm64/dist/libEGL.so out/linux/arm64/angle/
+          cp angle-linux-arm64/dist/libGLESv2.so out/linux/arm64/angle/
+          cp angle-linux-x64/dist/libEGL.so out/linux/x64/angle/
+          cp angle-linux-x64/dist/libGLESv2.so out/linux/x64/angle/
+          cp angle-macos-arm64/dist/libEGL.dylib out/macos/arm64/angle/
+          cp angle-macos-arm64/dist/libGLESv2.dylib out/macos/arm64/angle/
+          cp angle-macos-x64/dist/libEGL.dylib out/macos/x64/angle/
+          cp angle-macos-x64/dist/libGLESv2.dylib out/macos/x64/angle/
+          cp angle-windows-arm64/dist/libEGL.dll out/windows/arm64/angle/
+          cp angle-windows-arm64/dist/libGLESv2.dll out/windows/arm64/angle/
+          cp angle-windows-x64/dist/libEGL.dll out/windows/x64/angle/
+          cp angle-windows-x64/dist/libGLESv2.dll out/windows/x64/angle/
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: angle
+          path: out
