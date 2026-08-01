@@ -289,7 +289,8 @@ jobs:
           path: angle-linux-arm64
 
   package:
-    permissions: write-all
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     needs:
       - build-linux-arm64
