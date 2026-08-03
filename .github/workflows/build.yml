@@ -3,6 +3,13 @@ name: build-angle
 on:
   push:
     branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: 'ANGLE revision hash to build (leave empty for latest stable)'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   load-rev:
@@ -11,7 +18,12 @@ jobs:
       rev: ${{ steps.step1.outputs.rev }}
     steps:
       - id: step1
-        run: echo "rev=$(curl 'https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Windows&num=1&offset=0' | jq -r '.[0].hashes.angle')" >> "$GITHUB_OUTPUT"
+        run: |
+          if [ -n "${{ github.event.inputs.revision }}" ]; then
+            echo "rev=${{ github.event.inputs.revision }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "rev=$(curl 'https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Windows&num=1&offset=0' | jq -r '.[0].hashes.angle')" >> "$GITHUB_OUTPUT"
+          fi
 
   build-windows-x64:
     runs-on: windows-2022
@@ -253,6 +265,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     needs:
+      - load-rev
       - build-linux-arm64
       - build-linux-x64
       - build-macos-arm64
@@ -265,6 +278,8 @@ jobs:
       - name: Download all Artifacts
         uses: actions/download-artifact@v8
       - name: Pack
+        env:
+          ANGLE_REVISION: ${{ needs.load-rev.outputs.rev }}
         run: |
           mkdir -p out/linux/arm64/angle
           mkdir -p out/linux/x64/angle
@@ -285,6 +300,10 @@ jobs:
           cp angle-windows-x64/dist/libEGL.dll out/windows/x64/angle/
           cp angle-windows-x64/dist/libGLESv2.dll out/windows/x64/angle/
           cd out && zip -r -9 ../gdx-angle-natives.zip . && cd ../
+          if [ "$(cat revision.txt 2>/dev/null)" != "$ANGLE_REVISION" ]; then
+            echo "$ANGLE_REVISION" > revision.txt
+            git add revision.txt
+          fi
           git add gdx-angle-natives.zip
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
