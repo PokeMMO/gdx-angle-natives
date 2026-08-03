@@ -33,7 +33,7 @@ jobs:
         env:
           ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
         run: |
-          git clone https://github.com/google/angle . && git checkout "$env:ANGLE_REVISION"
+          git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$env:ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
@@ -75,7 +75,7 @@ jobs:
         env:
           ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
         run: |
-          git clone https://github.com/google/angle . && git checkout "$env:ANGLE_REVISION"
+          git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$env:ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
@@ -117,7 +117,7 @@ jobs:
         env:
           ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
         run: |
-          git clone https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
+          git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
@@ -151,7 +151,7 @@ jobs:
         env:
           ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
         run: |
-          git clone https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
+          git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
@@ -188,7 +188,7 @@ jobs:
         env:
           ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
         run: |
-          git clone https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
+          git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
@@ -227,7 +227,7 @@ jobs:
         env:
           ANGLE_REVISION: ${{needs.load-rev.outputs.rev}}
         run: |
-          git clone https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
+          git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
