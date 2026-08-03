@@ -42,7 +42,6 @@ jobs:
         run: |
           set PATH=%cd%\depot_tools;%PATH%
           set DEPOT_TOOLS_WIN_TOOLCHAIN=0
-          set DEPOT_TOOLS_UPDATE=0
           set vs2019_install=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
           set WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10
           cmd /c gclient
@@ -85,7 +84,6 @@ jobs:
         run: |
           set PATH=%cd%\depot_tools;%PATH%
           set DEPOT_TOOLS_WIN_TOOLCHAIN=0
-          set DEPOT_TOOLS_UPDATE=0
           set vs2019_install=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
           set WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10
           cmd /c gclient
@@ -126,7 +124,6 @@ jobs:
       - name: Build
         run: |
           export PATH="$(pwd)/depot_tools:$PATH"
-          export DEPOT_TOOLS_UPDATE=0
           python scripts/bootstrap.py
           gclient sync --shallow -D -R
           gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"x64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false"
@@ -161,7 +158,6 @@ jobs:
       - name: Build
         run: |
           export PATH="$(pwd)/depot_tools:$PATH"
-          export DEPOT_TOOLS_UPDATE=0
           python scripts/bootstrap.py
           gclient sync --shallow -D -R
           gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"arm64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false"
@@ -199,7 +195,6 @@ jobs:
       - name: Build
         run: |
           export PATH="$(pwd)/depot_tools:$PATH"
-          export DEPOT_TOOLS_UPDATE=0
           python scripts/bootstrap.py
           gclient sync --shallow -D -R
           gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"x64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false angle_enable_vulkan=true"
@@ -243,7 +238,6 @@ jobs:
       - name: Build
         run: |
           export PATH="$(pwd)/depot_tools:$PATH"
-          export DEPOT_TOOLS_UPDATE=0
           python scripts/bootstrap.py
           gclient sync --shallow -D -R
           build/linux/sysroot_scripts/install-sysroot.py --arch=arm64
