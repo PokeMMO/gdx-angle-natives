@@ -36,17 +36,18 @@ jobs:
           git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$env:ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
       - name: Build
         shell: cmd
         run: |
           set PATH=%cd%\depot_tools;%PATH%
           set DEPOT_TOOLS_WIN_TOOLCHAIN=0
+          set DEPOT_TOOLS_UPDATE=0
           set vs2019_install=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
           set WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10
           cmd /c gclient
           cmd /c python scripts/bootstrap.py
-          cmd /c gclient sync -D -R
+          cmd /c gclient sync --shallow -D -R
           cmd /c mkdir chrome
           cmd /c powershell -Command "Write-Output "MAJOR=132`nMINOR=0`nBUILD=6998`nPATCH=36"" > chrome/VERSION
           cmd /c gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"x64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false"
@@ -78,17 +79,18 @@ jobs:
           git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$env:ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
       - name: Build
         shell: cmd
         run: |
           set PATH=%cd%\depot_tools;%PATH%
           set DEPOT_TOOLS_WIN_TOOLCHAIN=0
+          set DEPOT_TOOLS_UPDATE=0
           set vs2019_install=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
           set WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10
           cmd /c gclient
           cmd /c python scripts/bootstrap.py
-          cmd /c gclient sync -D -R
+          cmd /c gclient sync --shallow -D -R
           cmd /c mkdir chrome
           cmd /c powershell -Command "Write-Output "MAJOR=132`nMINOR=0`nBUILD=6998`nPATCH=36"" > chrome/VERSION
           cmd /c gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 is_clang=false use_custom_libcxx=false use_custom_libcxx_for_host=false target_cpu=\"arm64\" angle_enable_gl=false angle_enable_null=false"
@@ -120,12 +122,13 @@ jobs:
           git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
       - name: Build
         run: |
           export PATH="$(pwd)/depot_tools:$PATH"
+          export DEPOT_TOOLS_UPDATE=0
           python scripts/bootstrap.py
-          gclient sync -D -R
+          gclient sync --shallow -D -R
           gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"x64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false"
           autoninja -C out/Release libGLESv2 libEGL
       - name: Pack
@@ -154,12 +157,13 @@ jobs:
           git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
       - name: Build
         run: |
           export PATH="$(pwd)/depot_tools:$PATH"
+          export DEPOT_TOOLS_UPDATE=0
           python scripts/bootstrap.py
-          gclient sync -D -R
+          gclient sync --shallow -D -R
           gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"arm64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false"
           autoninja -C out/Release libGLESv2 libEGL
       - name: Pack
@@ -191,12 +195,13 @@ jobs:
           git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
       - name: Build
         run: |
           export PATH="$(pwd)/depot_tools:$PATH"
+          export DEPOT_TOOLS_UPDATE=0
           python scripts/bootstrap.py
-          gclient sync -D -R
+          gclient sync --shallow -D -R
           gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"x64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false angle_enable_vulkan=true"
           autoninja -C out/Release libGLESv2 libEGL
       - name: Pack
@@ -230,7 +235,7 @@ jobs:
           git clone --filter=blob:none --no-checkout https://github.com/google/angle . && git checkout "$ANGLE_REVISION"
       - name: Fetch depot_tools
         run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
       - name: Install ARM64 GNU Toolchain
         run: |
           sudo apt-get update
@@ -238,8 +243,9 @@ jobs:
       - name: Build
         run: |
           export PATH="$(pwd)/depot_tools:$PATH"
+          export DEPOT_TOOLS_UPDATE=0
           python scripts/bootstrap.py
-          gclient sync -D -R
+          gclient sync --shallow -D -R
           build/linux/sysroot_scripts/install-sysroot.py --arch=arm64
           gn gen out/Release --args="is_debug=false is_official_build=true chrome_pgo_phase=false is_chrome_branding=false is_cfi=false enable_stripping=true angle_enable_overlay=false is_component_build=false dcheck_always_on=false symbol_level=0 blink_symbol_level=0 target_cpu=\"arm64\" angle_build_all=false angle_enable_gl=false angle_enable_null=false angle_enable_vulkan=true"
           autoninja -C out/Release libGLESv2 libEGL
